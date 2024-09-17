@@ -1,8 +1,6 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
-using WebApplication2;
-using Microsoft.Extensions.Logging;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -13,7 +11,6 @@ builder.Services.AddSwaggerGen();
 
 // Подключение к базе данных
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-
 builder.Services.AddSingleton<DataBaseService>(sp =>
 {
 	var logger = sp.GetRequiredService<ILogger<DataBaseService>>();
@@ -21,7 +18,7 @@ builder.Services.AddSingleton<DataBaseService>(sp =>
 });
 
 // Настройка JWT с ключом из конфигурации или переменной окружения
-var key = Encoding.UTF8.GetBytes("fdsgiuasfogewnrIURibnwfeszidscfqweqfxs");
+var key = Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"] ?? "fdsgiuasfogewnrIURibnwfeszidscfqweqfxs");
 
 builder.Services.AddAuthentication(options =>
 {
@@ -71,7 +68,7 @@ if (app.Environment.IsDevelopment())
 	app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection(); // Оставляем, если ты используешь https, если нет, временно можно закомментировать
+app.UseHttpsRedirection(); // Можно временно закомментировать, если окружение не поддерживает HTTPS
 
 app.UseCors("AllowAll");
 
@@ -79,5 +76,8 @@ app.UseAuthentication();  // Включаем JWT аутентификацию
 app.UseAuthorization();
 
 app.MapControllers();
+
+// Настройка прослушивания на порту 8080
+app.Urls.Add("http://*:8080");
 
 app.Run();
