@@ -13,14 +13,16 @@ builder.Services.AddSwaggerGen();
 
 // Подключение к базе данных
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+
 builder.Services.AddSingleton<DataBaseService>(sp =>
 {
 	var logger = sp.GetRequiredService<ILogger<DataBaseService>>();
 	return new DataBaseService(connectionString, logger);
 });
 
-// Настройка JWT
+// Настройка JWT с ключом из конфигурации или переменной окружения
 var key = Encoding.UTF8.GetBytes("fdsgiuasfogewnrIURibnwfeszidscfqweqfxs");
+
 builder.Services.AddAuthentication(options =>
 {
 	options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -28,7 +30,7 @@ builder.Services.AddAuthentication(options =>
 })
 .AddJwtBearer(options =>
 {
-	options.RequireHttpsMetadata = false;
+	options.RequireHttpsMetadata = false; // Убедись, что это подходит для твоего окружения
 	options.SaveToken = true;
 	options.TokenValidationParameters = new TokenValidationParameters
 	{
@@ -61,6 +63,7 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
+// Включаем Swagger только в разработке
 if (app.Environment.IsDevelopment())
 {
 	app.UseDeveloperExceptionPage();
@@ -68,11 +71,13 @@ if (app.Environment.IsDevelopment())
 	app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
+app.UseHttpsRedirection(); // Оставляем, если ты используешь https, если нет, временно можно закомментировать
+
 app.UseCors("AllowAll");
 
-app.UseAuthentication();  // Добавляем JWT аутентификацию
+app.UseAuthentication();  // Включаем JWT аутентификацию
 app.UseAuthorization();
 
 app.MapControllers();
+
 app.Run();
